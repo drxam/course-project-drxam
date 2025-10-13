@@ -38,9 +38,8 @@ def health():
 _DB = {"items": []}
 
 
-@app.post("/items")
-def create_item(name: str):
-    # Улучшенная валидация с более детальными сообщениями
+def validate_item_name(name: str) -> str:
+    """Валидация имени элемента с детальными сообщениями об ошибках"""
     if not name:
         raise ApiError(code="validation_error", message="name is required", status=422)
     if len(name) > 100:
@@ -53,8 +52,15 @@ def create_item(name: str):
             message="name cannot be empty or whitespace only",
             status=422,
         )
+    return name.strip()
 
-    item = {"id": len(_DB["items"]) + 1, "name": name.strip()}
+
+@app.post("/items")
+def create_item(name: str):
+    # Используем функцию валидации для переиспользования
+    validated_name = validate_item_name(name)
+
+    item = {"id": len(_DB["items"]) + 1, "name": validated_name}
     _DB["items"].append(item)
     return item
 

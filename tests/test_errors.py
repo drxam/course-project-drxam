@@ -35,3 +35,12 @@ def test_validation_error_too_long():
     assert r.status_code == 422
     body = r.json()
     assert body["error"]["code"] == "validation_error"
+
+
+def test_validation_success_with_trim():
+    """Тест успешного создания с trim пробелов"""
+    r = client.post("/items", params={"name": "  valid name  "})
+    assert r.status_code == 200
+    response = r.json()
+    assert response["name"] == "valid name"  # проверяем что пробелы обрезаны
+    assert "id" in response
