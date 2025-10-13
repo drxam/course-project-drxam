@@ -40,11 +40,21 @@ _DB = {"items": []}
 
 @app.post("/items")
 def create_item(name: str):
-    if not name or len(name) > 100:
+    # Улучшенная валидация с более детальными сообщениями
+    if not name:
+        raise ApiError(code="validation_error", message="name is required", status=422)
+    if len(name) > 100:
         raise ApiError(
             code="validation_error", message="name must be 1..100 chars", status=422
         )
-    item = {"id": len(_DB["items"]) + 1, "name": name}
+    if len(name.strip()) == 0:
+        raise ApiError(
+            code="validation_error",
+            message="name cannot be empty or whitespace only",
+            status=422,
+        )
+
+    item = {"id": len(_DB["items"]) + 1, "name": name.strip()}
     _DB["items"].append(item)
     return item
 
