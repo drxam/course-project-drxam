@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.middleware.base import BaseHTTPMiddleware
 
 from app.security.file_validation import (
     generate_safe_filename,
@@ -19,20 +18,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class CorrelationIdMiddleware(BaseHTTPMiddleware):
-    """Middleware для добавления correlation_id в запросы."""
-
-    async def dispatch(self, request: Request, call_next):
-        import uuid
-
-        correlation_id = str(uuid.uuid4())
-        request.state.correlation_id = correlation_id
-        response = await call_next(request)
-        return response
-
-
 app = FastAPI(title="SecDev Course App", version="0.1.0")
-app.add_middleware(CorrelationIdMiddleware)
+
+
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    """Middleware для добавления correlation_id в запросы."""
+    import uuid
+
+    correlation_id = str(uuid.uuid4())
+    request.state.correlation_id = correlation_id
+    response = await call_next(request)
+    return response
+
 
 # Проверка обязательных секретов при запуске (опционально для демо)
 # В реальном проекте здесь будет проверка критичных секретов
