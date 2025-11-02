@@ -7,9 +7,14 @@ from typing import Optional
 # Паттерны для поиска секретов в строках
 # Порядок важен: более специфичные паттерны должны быть первыми
 SECRET_PATTERNS = [
+    # Bearer токены (самый специфичный - должен быть первым)
     (r"(?i)(authorization\s*:\s*Bearer\s+)([^\s\"']+)", r"\1***MASKED***"),
-    # Этот паттерн ловит authorization без Bearer (например, Basic auth)
-    (r"(?i)(authorization\s*:\s*)(?!Bearer\s)([^\s\"']+)", r"\1***MASKED***"),
+    # Другие типы authorization (Basic, Digest) -
+    # пропускается в функции если Bearer уже замаскирован
+    (
+        r"(?i)(authorization\s*:\s*)([^\s\"']+)",
+        r"\1***MASKED***",
+    ),
     (r"(?i)(password\s*[=:]\s*)([^\s&\"']+)", r"\1***MASKED***"),
     (r"(?i)(token\s*[=:]\s*)([^\s&\"']+)", r"\1***MASKED***"),
     (r"(?i)(api[_-]?key\s*[=:]\s*)([^\s&\"']+)", r"\1***MASKED***"),
@@ -44,6 +49,16 @@ def mask_secrets_in_string(text: str) -> str:
         Строка с замаскированными секретами
     """
     result = text
-    for pattern, replacement in SECRET_PATTERNS:
+    # Если строка уже содержит замаскированный Bearer токен, пропускаем второй authorization паттерн
+    has_bearer_masked = "Bearer ***MASKED***" in result
+
+    for i, (pattern, replacement) in enumerate(SECRET_PATTERNS):
+        # Пропускаем второй паттерн (индекс 1) если уже есть замаскированный Bearer
+        if i == 1 and has_bearer_masked:
+            continue
         result = re.sub(pattern, replacement, result)
+        # Обновляем флаг после применения первого паттерна
+        if i == 0 and "Bearer ***MASKED***" in result:
+            has_bearer_masked = True
+
     return result
