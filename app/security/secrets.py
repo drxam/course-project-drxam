@@ -5,13 +5,15 @@ import re
 from typing import Optional
 
 # Паттерны для поиска секретов в строках
+# Порядок важен: более специфичные паттерны должны быть первыми
 SECRET_PATTERNS = [
+    (r"(?i)(authorization\s*:\s*Bearer\s+)([^\s\"']+)", r"\1***MASKED***"),
+    # Этот паттерн ловит authorization без Bearer (например, Basic auth)
+    (r"(?i)(authorization\s*:\s*)(?!Bearer\s)([^\s\"']+)", r"\1***MASKED***"),
     (r"(?i)(password\s*[=:]\s*)([^\s&\"']+)", r"\1***MASKED***"),
     (r"(?i)(token\s*[=:]\s*)([^\s&\"']+)", r"\1***MASKED***"),
     (r"(?i)(api[_-]?key\s*[=:]\s*)([^\s&\"']+)", r"\1***MASKED***"),
     (r"(?i)(secret\s*[=:]\s*)([^\s&\"']+)", r"\1***MASKED***"),
-    (r"(?i)(authorization\s*:\s*Bearer\s+)([^\s\"']+)", r"\1***MASKED***"),
-    (r"(?i)(authorization\s*:\s*)([^\s\"']+)", r"\1***MASKED***"),
 ]
 
 
