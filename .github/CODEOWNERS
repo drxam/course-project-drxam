@@ -1,0 +1,16 @@
+# CODEOWNERS для автоматического назначения ревьюеров
+
+# Владельцы всего репозитория
+* @hse-secdev-2025-fall/course-instructors
+
+# Владельцы API компонента
+/app/ @hse-secdev-2025-fall/course-instructors
+
+# Владельцы тестов
+/tests/ @hse-secdev-2025-fall/course-instructors
+
+# Владельцы CI/CD
+/.github/ @hse-secdev-2025-fall/course-instructors
+
+# Владельцы документации
+*.md @hse-secdev-2025-fall/course-instructors
