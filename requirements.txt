@@ -1,3 +1,6 @@
 fastapi==0.112.2
 uvicorn==0.30.5
 python-multipart==0.0.9
+python-jose[cryptography]==3.3.0
+passlib[argon2]==1.7.4
+python-dateutil==2.9.0

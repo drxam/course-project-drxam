@@ -4,11 +4,19 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 
+# Импорт роутеров API v1
+from app.api.v1 import auth, items
 from app.security.file_validation import (
     generate_safe_filename,
     validate_and_sanitize_path,
     validate_file_content,
     validate_file_size,
+)
+from app.security.input_validation import (
+    validate_integer_range,
+    validate_string_format,
+    validate_string_length,
+    with_timeout,
 )
 from app.security.problems import create_problem_detail
 from app.security.secrets import mask_secrets_in_string
@@ -19,6 +27,10 @@ logger = logging.getLogger(__name__)
 
 
 app = FastAPI(title="SecDev Course App", version="0.1.0")
+
+# Подключение роутеров API v1
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(items.router, prefix="/api/v1")
 
 
 @app.middleware("http")
@@ -120,20 +132,47 @@ _DB = {"items": []}
 def validate_item_name(name: str) -> str:
     """Валидация имени элемента с детальными сообщениями об ошибках"""
     if not name:
-        raise ApiError(code="validation_error", message="name is required", status=422)
-    if len(name) > 100:
         raise ApiError(
             title="Validation Error",
-            detail="name must be 1..100 chars",
+            detail="name is required",
             status=422,
             type_uri="https://api.example.com/problems/validation-error",
-            errors=[{"field": "name", "message": "name must be 1..100 chars"}],
+            errors=[{"field": "name", "message": "name is required"}],
         )
+
+    # Контроль 3: Валидация длины строки
+    is_valid_length, length_error = validate_string_length(
+        name, max_length=100, min_length=1
+    )
+    if not is_valid_length:
+        raise ApiError(
+            title="Validation Error",
+            detail=length_error or "name length validation failed",
+            status=422,
+            type_uri="https://api.example.com/problems/validation-error",
+            errors=[{"field": "name", "message": length_error}],
+        )
+
+    # Контроль 3: Валидация формата строки (защита от инъекций)
+    is_valid_format, format_error = validate_string_format(name)
+    if not is_valid_format:
+        raise ApiError(
+            title="Validation Error",
+            detail=format_error or "name format validation failed",
+            status=422,
+            type_uri="https://api.example.com/problems/validation-error",
+            errors=[{"field": "name", "message": format_error}],
+        )
+
     if len(name.strip()) == 0:
         raise ApiError(
-            code="validation_error",
-            message="name cannot be empty or whitespace only",
+            title="Validation Error",
+            detail="name cannot be empty or whitespace only",
             status=422,
+            type_uri="https://api.example.com/problems/validation-error",
+            errors=[
+                {"field": "name", "message": "name cannot be empty or whitespace only"}
+            ],
         )
     return name.strip()
 
@@ -150,6 +189,16 @@ def create_item(name: str):
 
 @app.get("/items/{item_id}")
 def get_item(item_id: int):
+    # Контроль 1: Валидация integer параметра (защита от overflow/underflow)
+    is_valid, error_msg = validate_integer_range(item_id, min_value=1)
+    if not is_valid:
+        raise ApiError(
+            title="Validation Error",
+            detail=error_msg or "Invalid item_id",
+            status=422,
+            type_uri="https://api.example.com/problems/validation-error",
+        )
+
     for it in _DB["items"]:
         if it["id"] == item_id:
             return it
@@ -242,3 +291,43 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
             status=500,
             type_uri="https://api.example.com/problems/internal-error",
         )
+
+
+# Эндпойнт для демонстрации контроля таймаутов
+@app.post("/process")
+async def process_data(request: Request, delay: float = 1.0):
+    """Обработать данные с таймаутом (контроль 2)."""
+    correlation_id = getattr(request.state, "correlation_id", None)
+
+    # Валидация параметра delay
+    if delay < 0 or delay > 60:
+        raise ApiError(
+            title="Validation Error",
+            detail="delay must be between 0 and 60 seconds",
+            status=422,
+            type_uri="https://api.example.com/problems/validation-error",
+        )
+
+    async def process_operation():
+        """Имитация долгой операции."""
+        import asyncio
+
+        await asyncio.sleep(delay)
+        return {"processed": True, "delay": delay}
+
+    # Контроль 2: Таймаут для операции
+    is_success, result, error_msg = await with_timeout(
+        process_operation(),
+        timeout=5.0,
+        timeout_message="Operation exceeded 5 second timeout",
+    )
+
+    if not is_success:
+        raise ApiError(
+            title="Timeout Error",
+            detail=error_msg or "Operation timed out",
+            status=408,
+            type_uri="https://api.example.com/problems/timeout",
+        )
+
+    return {"result": result, "correlation_id": correlation_id}
