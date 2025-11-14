@@ -1,17 +1,65 @@
+# Git
 .git
 .gitignore
 .gitattributes
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.sqlite
-*.db
+*.py[cod]
+*$py.class
+*.so
+.Python
 .venv/
-dist/
-build/
+venv/
+ENV/
+env/
+
+# Testing
 .pytest_cache/
 .coverage
 htmlcov/
-node_modules/
+.tox/
+.hypothesis/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Database
+*.sqlite
+*.db
+
+# Node (если есть)
+node_modules/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI
+.github/
