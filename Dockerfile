@@ -26,12 +26,8 @@ RUN groupadd -r appuser && \
     chown -R appuser:appuser /app
 
 # Копирование только установленных пакетов из builder
-COPY --from=builder /root/.local /home/appuser/.local
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 COPY --chown=appuser:appuser . .
-
-# Установка прав на файлы
-RUN chmod -R 755 /app && \
-    chown -R appuser:appuser /app
 
 # Переключение на non-root пользователя
 USER appuser
