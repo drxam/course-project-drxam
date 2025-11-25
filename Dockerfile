@@ -7,7 +7,7 @@ WORKDIR /build
 # Установка зависимостей для сборки
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    gcc \
+    gcc=12.2.0-14 \
     && rm -rf /var/lib/apt/lists/*
 
 # Копирование и установка зависимостей
