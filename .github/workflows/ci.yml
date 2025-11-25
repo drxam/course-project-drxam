@@ -36,3 +36,56 @@ jobs:
 
       - name: Pre-commit (all files)
         run: pre-commit run --all-files
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Lint Dockerfile with Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+
+      - name: Build Docker image
+        run: docker build -t secdev-app:test .
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: secdev-app:test
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check non-root user
+        run: |
+          USER_ID=$(docker run --rm secdev-app:test id -u)
+          if [ "$USER_ID" = "0" ]; then
+            echo "ERROR: Container runs as root (UID 0)"
+            exit 1
+          fi
+          echo "✓ Container runs as non-root user (UID: $USER_ID)"
+
+      - name: Check healthcheck
+        run: |
+          docker run -d --name test-container -p 8000:8000 secdev-app:test
+          sleep 10
+          HEALTH=$(docker inspect --format='{{.State.Health.Status}}' test-container)
+          if [ "$HEALTH" != "healthy" ]; then
+            echo "WARNING: Container health status: $HEALTH"
+          else
+            echo "✓ Container is healthy"
+          fi
+          docker stop test-container
+          docker rm test-container
