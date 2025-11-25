@@ -1,8 +1,13 @@
+[tool.poetry]
+package-mode = false
+
 [tool.ruff]
 line-length = 100
-select = ["E","F","W","I"]
 target-version = "py311"
-exclude = ["venv",".venv","build","dist"]
+exclude = ["venv", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
 
 [tool.isort]
 profile = "black"
@@ -13,13 +18,12 @@ name = "course-project-drxam"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Dmitriy",email = "DreadDima12345@yandex.ru"}
+    {name = "Dmitriy",email = "DreadDima12345@yandex.ru"} 
 ]
-readme = "README.md"
+readme = "README.md"  
 requires-python = ">=3.14"
 dependencies = [
 ]
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
