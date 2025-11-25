@@ -1,5 +1,7 @@
 """Эндпойнты для работы с items."""
 
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
@@ -11,7 +13,6 @@ from app.security.input_validation import (
     validate_string_format,
     validate_string_length,
 )
-from typing import List, Optional
 
 router = APIRouter(prefix="/items", tags=["items"])
 
