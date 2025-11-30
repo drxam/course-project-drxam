@@ -4,7 +4,12 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 
 from app.database import create_user, get_user_by_email, get_user_by_username
-from app.security.auth import Role, create_access_token, get_password_hash, verify_password
+from app.security.auth import (
+    Role,
+    create_access_token,
+    get_password_hash,
+    verify_password,
+)
 from app.security.input_validation import validate_string_length
 
 router = APIRouter(prefix="/auth", tags=["auth"])
