@@ -32,9 +32,7 @@ def get_user_by_email(email: str) -> Optional[User]:
     return None
 
 
-def create_user(
-    username: str, email: str, hashed_password: str, role: str = "user"
-) -> User:
+def create_user(username: str, email: str, hashed_password: str, role: str = "user") -> User:
     """Создать нового пользователя."""
     global _user_id_counter
     user_id = _user_id_counter
@@ -55,9 +53,7 @@ def get_item_by_id(item_id: int) -> Optional[Item]:
     return _items_db.get(item_id)
 
 
-def get_items(
-    owner_id: Optional[int] = None, limit: int = 10, offset: int = 0
-) -> List[Item]:
+def get_items(owner_id: Optional[int] = None, limit: int = 10, offset: int = 0) -> List[Item]:
     """Получить список элементов с пагинацией."""
     items = list(_items_db.values())
 

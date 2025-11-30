@@ -5,13 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from app.database import (
-    create_item,
-    delete_item,
-    get_item_by_id,
-    get_items,
-    update_item,
-)
+from app.database import create_item, delete_item, get_item_by_id, get_items, update_item
 from app.dependencies import get_current_active_user
 from app.models import Item, User
 from app.security.input_validation import (

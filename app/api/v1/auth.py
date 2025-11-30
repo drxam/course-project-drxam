@@ -4,12 +4,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 
 from app.database import create_user, get_user_by_email, get_user_by_username
-from app.security.auth import (
-    Role,
-    create_access_token,
-    get_password_hash,
-    verify_password,
-)
+from app.security.auth import Role, create_access_token, get_password_hash, verify_password
 from app.security.input_validation import validate_string_length
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -37,17 +32,13 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-@router.post(
-    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(request: Request, user_data: RegisterRequest):
     """Регистрация нового пользователя."""
     getattr(request.state, "correlation_id", None)
 
     # Валидация username
-    is_valid, error_msg = validate_string_length(
-        user_data.username, max_length=50, min_length=3
-    )
+    is_valid, error_msg = validate_string_length(user_data.username, max_length=50, min_length=3)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -55,9 +46,7 @@ async def register(request: Request, user_data: RegisterRequest):
         )
 
     # Валидация пароля (минимум 12 символов согласно NFR-005)
-    is_valid, error_msg = validate_string_length(
-        user_data.password, max_length=128, min_length=12
-    )
+    is_valid, error_msg = validate_string_length(user_data.password, max_length=128, min_length=12)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

@@ -35,3 +35,6 @@ dev = [
     "isort (>=7.0.0,<8.0.0)",
     "ruff (>=0.14.6,<0.15.0)"
 ]
+
+[tool.black]
+line-length = 100

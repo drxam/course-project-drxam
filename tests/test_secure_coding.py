@@ -35,10 +35,7 @@ def test_integer_validation_negative_underflow():
     assert r.status_code == 422
     body = r.json()
     assert body["title"] == "Validation Error"
-    assert (
-        "underflow" in body["detail"].lower()
-        or "below minimum" in body["detail"].lower()
-    )
+    assert "underflow" in body["detail"].lower() or "below minimum" in body["detail"].lower()
     assert body["status"] == 422
 
 
@@ -59,10 +56,7 @@ def test_integer_validation_negative_overflow():
     assert r.status_code == 422
     body = r.json()
     assert body["title"] == "Validation Error"
-    assert (
-        "overflow" in body["detail"].lower()
-        or "exceeds maximum" in body["detail"].lower()
-    )
+    assert "overflow" in body["detail"].lower() or "exceeds maximum" in body["detail"].lower()
     assert body["status"] == 422
 
 
@@ -129,10 +123,7 @@ def test_string_validation_negative_too_long():
     assert r.status_code == 422
     body = r.json()
     assert body["title"] == "Validation Error"
-    assert (
-        "exceeds maximum" in body["detail"].lower()
-        or "length" in body["detail"].lower()
-    )
+    assert "exceeds maximum" in body["detail"].lower() or "length" in body["detail"].lower()
     assert body["status"] == 422
 
 
@@ -153,9 +144,7 @@ def test_string_validation_negative_sql_injection():
     assert r.status_code == 422
     body = r.json()
     assert body["title"] == "Validation Error"
-    assert (
-        "dangerous" in body["detail"].lower() or "disallowed" in body["detail"].lower()
-    )
+    assert "dangerous" in body["detail"].lower() or "disallowed" in body["detail"].lower()
     assert body["status"] == 422
 
 
@@ -167,9 +156,7 @@ def test_string_validation_negative_xss_attempt():
     assert r.status_code == 422
     body = r.json()
     assert body["title"] == "Validation Error"
-    assert (
-        "dangerous" in body["detail"].lower() or "disallowed" in body["detail"].lower()
-    )
+    assert "dangerous" in body["detail"].lower() or "disallowed" in body["detail"].lower()
     assert body["status"] == 422
 
 
