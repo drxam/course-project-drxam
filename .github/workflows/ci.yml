@@ -44,32 +44,24 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest --cov=app --cov-report=html --cov-report=term --cov-report=xml -v
+          pytest --cov=app --cov-report=html --cov-report=term -v
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           PYTHONPATH: ${{ github.workspace }}
 
-      - name: Upload coverage report (HTML)
+      - name: Upload coverage HTML report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report-html
+          name: coverage-report
           path: htmlcov/
-          retention-days: 7
-
-      - name: Upload coverage report (XML)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report-xml
-          path: coverage.xml
           retention-days: 7
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pytest-results
+          name: test-results
           path: .pytest_cache/
           retention-days: 7
 
@@ -79,9 +71,6 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Dry-run staging deployment
         run: |
           echo "=========================================="
@@ -92,6 +81,3 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "Triggered by: ${{ github.actor }}"
           echo "=========================================="
-        env:
-          DEPLOY_ENV: staging
-          APP_VERSION: ${{ github.sha }}
