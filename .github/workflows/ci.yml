@@ -29,9 +29,9 @@ jobs:
       - name: Tests with coverage
         run: pytest --cov --cov-report=html --cov-report=term -v
         env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}  # C3
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
-      - name: Upload coverage report  # C4
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -39,7 +39,7 @@ jobs:
           path: htmlcov/
           retention-days: 7
 
-  deploy-staging:  # C5
+  deploy-staging:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
