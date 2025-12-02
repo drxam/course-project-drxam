@@ -26,5 +26,26 @@ jobs:
           ruff check --output-format=github .
           black --check .
           isort --check-only .
-      - name: Tests
-        run: pytest -q
+      - name: Tests with coverage
+        run: pytest --cov --cov-report=html --cov-report=term -v
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}  # C3
+
+      - name: Upload coverage report  # C4
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: htmlcov/
+          retention-days: 7
+
+  deploy-staging:  # C5
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Dry-run staging deploy
+        run: |
+          echo "🚀 Deploying to staging environment"
+          echo "Version: ${{ github.sha }}"
+          echo "✅ Deployment simulation complete"
