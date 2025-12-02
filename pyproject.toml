@@ -1,9 +1,40 @@
+[tool.poetry]
+package-mode = false
+
 [tool.ruff]
 line-length = 100
-select = ["E","F","W","I"]
 target-version = "py311"
-exclude = ["venv",".venv","build","dist"]
+exclude = ["venv", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
 
 [tool.isort]
 profile = "black"
 line_length = 100
+
+[project]
+name = "course-project-drxam"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Dmitriy",email = "DreadDima12345@yandex.ru"} 
+]
+readme = "README.md"  
+requires-python = ">=3.14"
+dependencies = [
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "black (>=25.11.0,<26.0.0)",
+    "isort (>=7.0.0,<8.0.0)",
+    "ruff (>=0.14.6,<0.15.0)"
+]
+
+[tool.black]
+line-length = 100

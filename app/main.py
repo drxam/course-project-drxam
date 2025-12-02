@@ -141,9 +141,7 @@ def validate_item_name(name: str) -> str:
         )
 
     # Контроль 3: Валидация длины строки
-    is_valid_length, length_error = validate_string_length(
-        name, max_length=100, min_length=1
-    )
+    is_valid_length, length_error = validate_string_length(name, max_length=100, min_length=1)
     if not is_valid_length:
         raise ApiError(
             title="Validation Error",
@@ -170,9 +168,7 @@ def validate_item_name(name: str) -> str:
             detail="name cannot be empty or whitespace only",
             status=422,
             type_uri="https://api.example.com/problems/validation-error",
-            errors=[
-                {"field": "name", "message": "name cannot be empty or whitespace only"}
-            ],
+            errors=[{"field": "name", "message": "name cannot be empty or whitespace only"}],
         )
     return name.strip()
 
