@@ -1,51 +1,97 @@
 name: CI
+
 on:
   push:
+    branches: [ main, develop ]
   pull_request:
+    branches: [ main ]
+
 permissions:
   contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
-      - name: Lint & Format
+
+      - name: Lint with ruff
+        run: ruff check --output-format=github .
+        continue-on-error: false
+
+      - name: Check formatting with black
+        run: black --check .
+
+      - name: Check imports with isort
+        run: isort --check-only .
+
+      - name: Run tests with coverage
         run: |
-          ruff check --output-format=github .
-          black --check .
-          isort --check-only .
-      - name: Tests with coverage
-        run: pytest --cov --cov-report=html --cov-report=term -v
+          pytest --cov=app --cov-report=html --cov-report=term --cov-report=xml -v
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PYTHONPATH: ${{ github.workspace }}
 
-      - name: Upload coverage report
+      - name: Upload coverage report (HTML)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report
+          name: coverage-report-html
           path: htmlcov/
           retention-days: 7
 
+      - name: Upload coverage report (XML)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-xml
+          path: coverage.xml
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-results
+          path: .pytest_cache/
+          retention-days: 7
+
   deploy-staging:
-    needs: build
+    needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
     steps:
-      - name: Dry-run staging deploy
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dry-run staging deployment
         run: |
-          echo "🚀 Deploying to staging environment"
-          echo "Version: ${{ github.sha }}"
-          echo "✅ Deployment simulation complete"
+          echo "=========================================="
+          echo "🚀 Staging Deployment Simulation"
+          echo "=========================================="
+          echo "Environment: staging"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "=========================================="
+        env:
+          DEPLOY_ENV: staging
+          APP_VERSION: ${{ github.sha }}
