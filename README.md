@@ -26,7 +26,6 @@ pytest -q
 ```
 
 ## CI
-[![CI](https://github.com/drxam/course-project-drxam/actions/workflows/ci.yml/badge.svg)](https://github.com/drxam/course-project-drxam/actions/workflows/ci.yml)
 В репозитории настроен workflow **CI** (GitHub Actions) — required check для `main`.
 Badge добавится автоматически после загрузки шаблона в GitHub.
 
