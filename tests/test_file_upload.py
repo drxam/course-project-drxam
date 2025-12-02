@@ -76,7 +76,10 @@ def test_upload_invalid_magic_bytes():
     assert r.status_code == 422
     body = r.json()
     assert body["title"] == "File Validation Error"
-    assert "mime type mismatch" in body["detail"].lower() or "not allowed" in body["detail"].lower()
+    assert (
+        "mime type mismatch" in body["detail"].lower()
+        or "not allowed" in body["detail"].lower()
+    )
 
 
 def test_upload_unknown_file_type():
@@ -90,7 +93,10 @@ def test_upload_unknown_file_type():
     assert r.status_code == 422
     body = r.json()
     assert body["title"] == "File Validation Error"
-    assert "unknown file type" in body["detail"].lower() or "not allowed" in body["detail"].lower()
+    assert (
+        "unknown file type" in body["detail"].lower()
+        or "not allowed" in body["detail"].lower()
+    )
 
 
 def test_upload_path_traversal_attempt():
