@@ -1,0 +1,30 @@
+# Vulnerability Waivers Policy
+#
+# This file contains waivers (exceptions) for known vulnerabilities that
+# have been reviewed and accepted with justification.
+#
+# Format:
+# - vulnerability_id: CVE-YYYY-NNNNN or GHSA-XXXX-XXXX-XXXX
+#   package: package-name
+#   version: affected-version-range
+#   severity: Critical|High|Medium|Low
+#   justification: Reason for waiver
+#   issue_url: Link to tracking issue/PR
+#   reviewed_date: YYYY-MM-DD
+#   review_due_date: YYYY-MM-DD (when to re-evaluate)
+#   status: active|expired|resolved
+#
+# Reference: See project documentation on SBOM and vulnerability management
+# for details on when waivers are appropriate.
+
+waivers: []
+  # Example structure (commented out):
+  # - vulnerability_id: "CVE-2024-XXXXX"
+  #   package: "example-package"
+  #   version: "<2.0.0"
+  #   severity: "Medium"
+  #   justification: "Vulnerability is in unused feature, no user input reaches affected code path"
+  #   issue_url: "https://github.com/org/repo/issues/123"
+  #   reviewed_date: "2024-01-15"
+  #   review_due_date: "2024-04-15"
+  #   status: "active"
