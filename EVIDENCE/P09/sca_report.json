@@ -1,0 +1,471 @@
+{
+ "matches": [
+  {
+   "vulnerability": {
+    "id": "GHSA-6c5p-j8vq-pqhj",
+    "dataSource": "https://github.com/advisories/GHSA-6c5p-j8vq-pqhj",
+    "namespace": "github:language:python",
+    "severity": "Critical",
+    "urls": [
+     "https://github.com/advisories/GHSA-6c5p-j8vq-pqhj"
+    ],
+    "description": "python-jose algorithm confusion with OpenSSH ECDSA keys",
+    "cvss": [
+     {
+      "version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+      "metrics": {
+       "baseScore": 7.4,
+       "exploitabilityScore": 2.2,
+       "impactScore": 5.2
+      },
+      "vendorMetadata": {
+       "base_severity": "High",
+       "status": "N/A"
+      }
+     }
+    ],
+    "fix": {
+     "versions": [
+      "3.4.0"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2024-33663",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2024-33663",
+     "namespace": "nvd:cpe",
+     "severity": "Medium",
+     "urls": [
+      "https://github.com/mpdavis/python-jose/issues/346",
+      "https://www.vicarius.io/vsociety/posts/algorithm-confusion-in-python-jose-cve-2024-33663",
+      "https://github.com/mpdavis/python-jose/issues/346",
+      "https://www.vicarius.io/vsociety/posts/algorithm-confusion-in-python-jose-cve-2024-33663"
+     ],
+     "description": "python-jose through 3.3.0 has algorithm confusion with OpenSSH ECDSA keys and other key formats. This is similar to CVE-2022-29217.",
+     "cvss": [
+      {
+       "source": "134c704f-9b21-4f2e-91b3-4a467353bcc0",
+       "type": "Secondary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+       "metrics": {
+        "baseScore": 6.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 2.5
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "python-matcher",
+     "searchedBy": {
+      "language": "python",
+      "namespace": "github:language:python",
+      "package": {
+       "name": "python-jose",
+       "version": "3.3.0"
+      }
+     },
+     "found": {
+      "versionConstraint": "<3.4.0 (python)",
+      "vulnerabilityID": "GHSA-6c5p-j8vq-pqhj"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "669ef579bdebb0d7",
+    "name": "python-jose",
+    "version": "3.3.0",
+    "type": "python",
+    "locations": [
+     {
+      "path": "/requirements.txt"
+     }
+    ],
+    "language": "python",
+    "licenses": [],
+    "cpes": [
+     "cpe:2.3:a:python-jose:python-jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-jose:python_jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_jose:python-jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_jose:python_jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_jose:3.3.0:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:pypi/python-jose@3.3.0",
+    "upstreams": []
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "GHSA-cjwg-qfpm-7377",
+    "dataSource": "https://github.com/advisories/GHSA-cjwg-qfpm-7377",
+    "namespace": "github:language:python",
+    "severity": "Medium",
+    "urls": [
+     "https://github.com/advisories/GHSA-cjwg-qfpm-7377"
+    ],
+    "description": "python-jose denial of service via compressed JWE content",
+    "cvss": [
+     {
+      "version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+      "metrics": {
+       "baseScore": 5.3,
+       "exploitabilityScore": 3.9,
+       "impactScore": 1.4
+      },
+      "vendorMetadata": {
+       "base_severity": "Medium",
+       "status": "N/A"
+      }
+     }
+    ],
+    "fix": {
+     "versions": [
+      "3.4.0"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2024-33664",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2024-33664",
+     "namespace": "nvd:cpe",
+     "severity": "Medium",
+     "urls": [
+      "https://github.com/mpdavis/python-jose/issues/344",
+      "https://github.com/mpdavis/python-jose/pull/345",
+      "https://www.vicarius.io/vsociety/posts/jwt-bomb-in-python-jose-cve-2024-33664",
+      "https://github.com/mpdavis/python-jose/issues/344",
+      "https://github.com/mpdavis/python-jose/pull/345",
+      "https://www.vicarius.io/vsociety/posts/jwt-bomb-in-python-jose-cve-2024-33664"
+     ],
+     "description": "python-jose through 3.3.0 allows attackers to cause a denial of service (resource consumption) during a decode via a crafted JSON Web Encryption (JWE) token with a high compression ratio, aka a \"JWT bomb.\" This is similar to CVE-2024-21319.",
+     "cvss": [
+      {
+       "source": "134c704f-9b21-4f2e-91b3-4a467353bcc0",
+       "type": "Secondary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+       "metrics": {
+        "baseScore": 5.3,
+        "exploitabilityScore": 3.9,
+        "impactScore": 1.4
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "python-matcher",
+     "searchedBy": {
+      "language": "python",
+      "namespace": "github:language:python",
+      "package": {
+       "name": "python-jose",
+       "version": "3.3.0"
+      }
+     },
+     "found": {
+      "versionConstraint": "<3.4.0 (python)",
+      "vulnerabilityID": "GHSA-cjwg-qfpm-7377"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "669ef579bdebb0d7",
+    "name": "python-jose",
+    "version": "3.3.0",
+    "type": "python",
+    "locations": [
+     {
+      "path": "/requirements.txt"
+     }
+    ],
+    "language": "python",
+    "licenses": [],
+    "cpes": [
+     "cpe:2.3:a:python-jose:python-jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-jose:python_jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_jose:python-jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_jose:python_jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-jose:3.3.0:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_jose:3.3.0:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:pypi/python-jose@3.3.0",
+    "upstreams": []
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "GHSA-59g5-xgcq-4qw3",
+    "dataSource": "https://github.com/advisories/GHSA-59g5-xgcq-4qw3",
+    "namespace": "github:language:python",
+    "severity": "High",
+    "urls": [
+     "https://github.com/advisories/GHSA-59g5-xgcq-4qw3"
+    ],
+    "description": "Denial of service (DoS) via deformation `multipart/form-data` boundary",
+    "cvss": [
+     {
+      "version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "metrics": {
+       "baseScore": 7.5,
+       "exploitabilityScore": 3.9,
+       "impactScore": 3.6
+      },
+      "vendorMetadata": {
+       "base_severity": "High",
+       "status": "N/A"
+      }
+     }
+    ],
+    "fix": {
+     "versions": [
+      "0.0.18"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2024-53981",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2024-53981",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://github.com/Kludex/python-multipart/commit/c4fe4d3cebc08c660e57dd709af1ffa7059b3177",
+      "https://github.com/Kludex/python-multipart/security/advisories/GHSA-59g5-xgcq-4qw3"
+     ],
+     "description": "python-multipart is a streaming multipart parser for Python. When parsing form data, python-multipart skips line breaks (CR \\r or LF \\n) in front of the first boundary and any tailing bytes after the last boundary. This happens one byte at a time and emits a log event each time, which may cause excessive logging for certain inputs. An attacker could abuse this by sending a malicious request with lots of data before the first or after the last boundary, causing high CPU load and stalling the processing thread for a significant amount of time. In case of ASGI application, this could stall the event loop and prevent other requests from being processed, resulting in a denial of service (DoS). This vulnerability is fixed in 0.0.18.",
+     "cvss": [
+      {
+       "source": "security-advisories@github.com",
+       "type": "Secondary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "python-matcher",
+     "searchedBy": {
+      "language": "python",
+      "namespace": "github:language:python",
+      "package": {
+       "name": "python-multipart",
+       "version": "0.0.9"
+      }
+     },
+     "found": {
+      "versionConstraint": "<0.0.18 (python)",
+      "vulnerabilityID": "GHSA-59g5-xgcq-4qw3"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "c1451098a1743fc8",
+    "name": "python-multipart",
+    "version": "0.0.9",
+    "type": "python",
+    "locations": [
+     {
+      "path": "/requirements.txt"
+     }
+    ],
+    "language": "python",
+    "licenses": [],
+    "cpes": [
+     "cpe:2.3:a:python-multipart:python-multipart:0.0.9:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-multipart:python_multipart:0.0.9:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_multipart:python-multipart:0.0.9:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_multipart:python_multipart:0.0.9:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-multipart:0.0.9:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_multipart:0.0.9:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:pypi/python-multipart@0.0.9",
+    "upstreams": []
+   }
+  }
+ ],
+ "source": {
+  "type": "file",
+  "target": "."
+ },
+ "distro": {
+  "name": "",
+  "version": "",
+  "idLike": null
+ },
+ "descriptor": {
+  "name": "grype",
+  "version": "0.80.0",
+  "configuration": {
+   "output": [
+    "json"
+   ],
+   "file": "",
+   "distro": "",
+   "add-cpes-if-none": false,
+   "output-template-file": "",
+   "check-for-app-update": true,
+   "only-fixed": false,
+   "only-notfixed": false,
+   "ignore-wontfix": "",
+   "platform": "",
+   "search": {
+    "scope": "squashed",
+    "unindexed-archives": false,
+    "indexed-archives": true
+   },
+   "ignore": [
+    {
+     "vulnerability": "",
+     "reason": "",
+     "namespace": "",
+     "fix-state": "",
+     "package": {
+      "name": "kernel-headers",
+      "version": "",
+      "language": "",
+      "type": "rpm",
+      "location": "",
+      "upstream-name": "kernel"
+     },
+     "vex-status": "",
+     "vex-justification": "",
+     "match-type": "exact-indirect-match"
+    },
+    {
+     "vulnerability": "",
+     "reason": "",
+     "namespace": "",
+     "fix-state": "",
+     "package": {
+      "name": "linux-headers-.*",
+      "version": "",
+      "language": "",
+      "type": "deb",
+      "location": "",
+      "upstream-name": "linux"
+     },
+     "vex-status": "",
+     "vex-justification": "",
+     "match-type": "exact-indirect-match"
+    },
+    {
+     "vulnerability": "",
+     "reason": "",
+     "namespace": "",
+     "fix-state": "",
+     "package": {
+      "name": "linux-libc-dev",
+      "version": "",
+      "language": "",
+      "type": "deb",
+      "location": "",
+      "upstream-name": "linux"
+     },
+     "vex-status": "",
+     "vex-justification": "",
+     "match-type": "exact-indirect-match"
+    }
+   ],
+   "exclude": [],
+   "db": {
+    "cache-dir": "/Users/dread/Library/Caches/grype/db",
+    "update-url": "https://toolbox-data.anchore.io/grype/databases/listing.json",
+    "ca-cert": "",
+    "auto-update": true,
+    "validate-by-hash-on-start": false,
+    "validate-age": true,
+    "max-allowed-built-age": 432000000000000,
+    "require-update-check": false,
+    "update-available-timeout": 30000000000,
+    "update-download-timeout": 300000000000
+   },
+   "externalSources": {
+    "enable": false,
+    "maven": {
+     "searchUpstreamBySha1": true,
+     "baseUrl": "https://search.maven.org/solrsearch/select"
+    }
+   },
+   "match": {
+    "java": {
+     "using-cpes": false
+    },
+    "dotnet": {
+     "using-cpes": false
+    },
+    "golang": {
+     "using-cpes": false,
+     "always-use-cpe-for-stdlib": true,
+     "allow-main-module-pseudo-version-comparison": false
+    },
+    "javascript": {
+     "using-cpes": false
+    },
+    "python": {
+     "using-cpes": false
+    },
+    "ruby": {
+     "using-cpes": false
+    },
+    "rust": {
+     "using-cpes": false
+    },
+    "stock": {
+     "using-cpes": true
+    }
+   },
+   "fail-on-severity": "",
+   "registry": {
+    "insecure-skip-tls-verify": false,
+    "insecure-use-http": false,
+    "auth": null,
+    "ca-cert": ""
+   },
+   "show-suppressed": false,
+   "by-cve": false,
+   "name": "",
+   "default-image-pull-source": "",
+   "vex-documents": [],
+   "vex-add": [],
+   "match-upstream-kernel-headers": false
+  },
+  "db": {
+   "built": "2025-12-05T00:25:22Z",
+   "schemaVersion": 5,
+   "location": "/Users/dread/Library/Caches/grype/db/5",
+   "checksum": "sha256:654f8966714086c62f37cc6c655a58479b64a5977dcaa3b219a4dd69136da440",
+   "error": null
+  },
+  "timestamp": "2025-12-05T20:10:44.363402+03:00"
+ }
+}
