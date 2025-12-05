@@ -44,22 +44,32 @@ jobs:
 
       - name: Install Syft
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          SYFT_VERSION="v1.6.1"
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin ${SYFT_VERSION}
           syft version
 
       - name: Generate SBOM with Syft
         run: |
           mkdir -p EVIDENCE/P09
           syft dir:. -o cyclonedx-json > EVIDENCE/P09/sbom.json
+          ls -lh EVIDENCE/P09/sbom.json
+          echo "SBOM file size: $(wc -c < EVIDENCE/P09/sbom.json) bytes"
 
       - name: Install Grype
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          GRYPE_VERSION="v0.82.0"
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin ${GRYPE_VERSION}
           grype version
 
       - name: Run SCA with Grype
         run: |
           grype sbom:EVIDENCE/P09/sbom.json -o json > EVIDENCE/P09/sca_report.json || true
+          if [ -f "EVIDENCE/P09/sca_report.json" ]; then
+            ls -lh EVIDENCE/P09/sca_report.json
+            echo "SCA report file size: $(wc -c < EVIDENCE/P09/sca_report.json) bytes"
+          else
+            echo "Warning: SCA report was not generated"
+          fi
 
       - name: Generate SCA Summary
         run: |
