@@ -44,7 +44,7 @@ jobs:
 
       - name: Install Syft
         run: |
-          SYFT_VERSION="v1.6.1"
+          SYFT_VERSION="v1.4.1"
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin ${SYFT_VERSION}
           syft version
 
@@ -57,7 +57,7 @@ jobs:
 
       - name: Install Grype
         run: |
-          GRYPE_VERSION="v0.82.0"
+          GRYPE_VERSION="v0.80.0"
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin ${GRYPE_VERSION}
           grype version
 
