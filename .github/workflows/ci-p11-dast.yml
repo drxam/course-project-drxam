@@ -142,33 +142,43 @@ jobs:
       - name: Find and copy ZAP reports to EVIDENCE/P11
         run: |
           mkdir -p EVIDENCE/P11
+          echo "=== Current directory ==="
+          pwd
+          echo ""
           echo "=== Searching for ZAP reports ==="
           # Action creates reports with these names: report_json.json, report_html.html, report_md.md
-          find . -name "report_*.json" -o -name "report_*.html" -o -name "report_*.md" 2>/dev/null | head -10
+          find . -name "report_*.json" -o -name "report_*.html" -o -name "report_*.md" 2>/dev/null | head -20
+          echo ""
+          echo "=== Checking root directory ==="
+          ls -la | grep -E "(report_|\.json|\.html|\.md)" || echo "No report files in root"
           echo ""
           echo "=== Checking common locations ==="
           ls -la report_*.* 2>/dev/null || echo "No report_*.* in root"
-          ls -la .zap/ 2>/dev/null || echo "No .zap/ directory"
-          ls -la reports/ 2>/dev/null || echo "No reports/ directory"
+          [ -d ".zap" ] && ls -la .zap/ 2>/dev/null || echo "No .zap/ directory"
+          [ -d "reports" ] && ls -la reports/ 2>/dev/null || echo "No reports/ directory"
           echo ""
           echo "=== Copying reports ==="
-          # Action creates: report_json.json, report_html.html, report_md.md
+          # Action creates: report_json.json, report_html.html, report_md.md in workspace root
+          REPORT_COPIED=false
+          
           if [ -f "report_json.json" ]; then
-            cp report_json.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON report"
+            cp report_json.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON report from root" && REPORT_COPIED=true
           elif [ -f ".zap/report_json.json" ]; then
-            cp .zap/report_json.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON from .zap/"
+            cp .zap/report_json.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON from .zap/" && REPORT_COPIED=true
           else
-            echo "✗ JSON report not found"
-            find . -name "*.json" -type f 2>/dev/null | head -5
+            echo "✗ JSON report not found in root or .zap/"
+            echo "Searching all JSON files:"
+            find . -name "*.json" -type f 2>/dev/null | head -10
           fi
           
           if [ -f "report_html.html" ]; then
-            cp report_html.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML report"
+            cp report_html.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML report from root" && REPORT_COPIED=true
           elif [ -f ".zap/report_html.html" ]; then
-            cp .zap/report_html.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML from .zap/"
+            cp .zap/report_html.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML from .zap/" && REPORT_COPIED=true
           else
-            echo "✗ HTML report not found"
-            find . -name "*.html" -type f 2>/dev/null | head -5
+            echo "✗ HTML report not found in root or .zap/"
+            echo "Searching all HTML files:"
+            find . -name "*.html" -type f 2>/dev/null | head -10
           fi
           
           if [ -f "report_md.md" ]; then
@@ -178,6 +188,12 @@ jobs:
           echo ""
           echo "=== Final EVIDENCE/P11 contents ==="
           ls -lah EVIDENCE/P11/ || echo "EVIDENCE/P11/ directory not found"
+          
+          if [ "$REPORT_COPIED" = "false" ]; then
+            echo ""
+            echo "WARNING: No reports were copied! Checking if Action uploaded them as artifact..."
+            echo "Reports should be available in the 'zap-reports' artifact"
+          fi
 
       - name: Parse ZAP results and generate summary
         run: |
