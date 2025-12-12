@@ -110,15 +110,22 @@ jobs:
       - name: Get application URL for ZAP
         id: app_url
         run: |
-          # Get application container IP for ZAP to connect
+          # ZAP Action runs in a container, so it needs to access the app via host network
+          # Since the app is exposed on host port 8000, we can use host.docker.internal
+          # But GitHub Actions runners don't support host.docker.internal, so we use the container IP
           APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' secdev-app | head -1)
           if [ -z "$APP_IP" ]; then
+            # Fallback to localhost (might work if ZAP Action uses host network)
             echo "TARGET_URL=http://localhost:8000" >> $GITHUB_OUTPUT
-            echo "Using localhost:8000"
+            echo "Using localhost:8000 (fallback)"
           else
             echo "TARGET_URL=http://$APP_IP:8000" >> $GITHUB_OUTPUT
             echo "Using app container IP: $APP_IP"
+            echo "Note: ZAP Action may need to be in the same Docker network to access this IP"
           fi
+          
+          # Also expose the port mapping for debugging
+          docker port secdev-app 2>/dev/null || echo "Could not get port mapping"
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
