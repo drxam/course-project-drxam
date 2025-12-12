@@ -132,9 +132,25 @@ jobs:
           
           # Run ZAP with explicit error handling
           set +e  # Don't exit on error immediately
-          # Use the correct ZAP image (ghcr.io is the official registry)
-          ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:stable"
+          # Use the correct ZAP image with zap-baseline script
+          # The stable image may not have zap-baseline.py, try bare image
+          ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:bare-stable"
           echo "Using ZAP image: $ZAP_IMAGE"
+          
+          # Test if image works, fallback to alternative
+          if ! docker pull $ZAP_IMAGE >/dev/null 2>&1; then
+            echo "Trying alternative ZAP image..."
+            ZAP_IMAGE="owasp/zap2docker-stable"
+            docker pull $ZAP_IMAGE || {
+              echo "Trying latest bare image..."
+              ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:bare"
+              docker pull $ZAP_IMAGE || {
+                echo "ERROR: Could not pull any ZAP image"
+                exit 1
+              }
+            }
+          fi
+          echo "Final ZAP image: $ZAP_IMAGE"
           
           # Create a container name for ZAP so we can copy files from it
           ZAP_CONTAINER="zap-scan-$(date +%s)"
