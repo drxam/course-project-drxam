@@ -81,15 +81,37 @@ jobs:
 
       - name: Verify application is accessible
         run: |
-          echo "Checking application accessibility..."
-          curl -v http://localhost:8000/health || true
-          docker ps
+          echo "=== Checking application accessibility ==="
+          echo "Docker containers:"
+          docker ps -a
+          echo ""
+          echo "Docker networks:"
           docker network ls
-          docker inspect secdev-app | grep -A 10 "NetworkSettings" || true
+          echo ""
+          echo "Testing application health endpoint:"
+          for i in {1..5}; do
+            if curl -sf http://localhost:8000/health; then
+              echo "✓ Application is accessible!"
+              break
+            else
+              echo "Attempt $i failed, waiting..."
+              sleep 2
+            fi
+          done
+          echo ""
+          echo "Application container details:"
+          docker inspect secdev-app --format '{{.State.Status}}' || echo "Container not found"
 
       - name: Run OWASP ZAP Baseline Scan
         run: |
-          # Use host network mode to access localhost:8000
+          echo "=== Starting ZAP Baseline Scan ==="
+          echo "Target URL: http://localhost:8000"
+          echo "Working directory: ${{ github.workspace }}/EVIDENCE/P11"
+          echo "Checking mount point..."
+          ls -la EVIDENCE/P11/ || mkdir -p EVIDENCE/P11
+          
+          # Run ZAP with explicit error handling
+          set +e  # Don't exit on error immediately
           docker run --rm \
             --network host \
             -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
@@ -101,12 +123,42 @@ jobs:
             -r /zap/wrk/zap_baseline.json \
             -w /zap/wrk/zap_baseline.html \
             -I \
-            -j \
-            --hook=/zap/auth_hook.py || {
-              echo "ZAP scan completed with exit code $?"
-              # Check if reports were generated despite exit code
-              ls -la EVIDENCE/P11/ || true
-            }
+            -j
+          
+          ZAP_EXIT_CODE=$?
+          echo "ZAP exit code: $ZAP_EXIT_CODE"
+          
+          # Check what files were created
+          echo ""
+          echo "=== Checking generated files ==="
+          ls -lah EVIDENCE/P11/ || echo "EVIDENCE/P11/ directory not found"
+          
+          # Check if reports exist
+          if [ -f "EVIDENCE/P11/zap_baseline.json" ]; then
+            echo "✓ JSON report found: $(wc -c < EVIDENCE/P11/zap_baseline.json) bytes"
+          else
+            echo "✗ JSON report NOT found"
+          fi
+          
+          if [ -f "EVIDENCE/P11/zap_baseline.html" ]; then
+            echo "✓ HTML report found: $(wc -c < EVIDENCE/P11/zap_baseline.html) bytes"
+          else
+            echo "✗ HTML report NOT found"
+          fi
+          
+          # If reports don't exist, try alternative paths
+          echo ""
+          echo "=== Checking alternative locations ==="
+          docker run --rm --network host -v "${{ github.workspace }}:/workspace" -w /workspace alpine ls -la EVIDENCE/P11/ 2>&1 || true
+          
+          # Exit with error if no reports were generated
+          if [ ! -f "EVIDENCE/P11/zap_baseline.json" ] && [ ! -f "EVIDENCE/P11/zap_baseline.html" ]; then
+            echo "ERROR: No ZAP reports were generated!"
+            echo "ZAP exit code was: $ZAP_EXIT_CODE"
+            exit 1
+          fi
+          
+          set -e  # Re-enable exit on error
           
           # Check if reports exist
           if [ -f "EVIDENCE/P11/zap_baseline.json" ]; then
