@@ -123,7 +123,11 @@ jobs:
             -r /zap/wrk/zap_baseline.json \
             -w /zap/wrk/zap_baseline.html \
             -I \
-            -j
+            -j \
+            2>&1 | tee /tmp/zap_output.log || true
+          
+          echo "=== ZAP Output ==="
+          cat /tmp/zap_output.log || echo "No output log found"
           
           ZAP_EXIT_CODE=$?
           echo "ZAP exit code: $ZAP_EXIT_CODE"
