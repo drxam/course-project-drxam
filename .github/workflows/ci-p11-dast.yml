@@ -137,24 +137,32 @@ jobs:
           echo "=== Running ZAP Baseline Scan ==="
           echo "Target: ${{ steps.app_url.outputs.TARGET_URL }}"
           
-          # Use official ZAP image - run with proper permissions
-          # Save reports directly to mounted volume
+          # Run ZAP with proper user permissions
+          # Use --user to run as current user to avoid permission issues
+          RUNNER_UID=$(id -u)
+          RUNNER_GID=$(id -g)
+          
           docker run --rm \
             --network host \
-            -v "${{ github.workspace }}:/zap/wrk/:rw" \
-            -e HOME=/tmp \
+            --user "${RUNNER_UID}:${RUNNER_GID}" \
+            -v "${{ github.workspace }}:/workspace:rw" \
+            -w /workspace \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ steps.app_url.outputs.TARGET_URL }} \
             -a \
             -I \
             -j \
-            -J /zap/wrk/EVIDENCE/P11/zap_baseline.json \
-            -r /zap/wrk/EVIDENCE/P11/zap_baseline.html \
-            -w /zap/wrk/EVIDENCE/P11/zap_baseline.md || {
-              echo "ZAP scan completed, checking for reports..."
-              # Continue even if ZAP exits with non-zero (warnings are OK)
+            -J EVIDENCE/P11/zap_baseline.json \
+            -r EVIDENCE/P11/zap_baseline.html \
+            -w EVIDENCE/P11/zap_baseline.md 2>&1 | tee /tmp/zap_output.log || {
+              ZAP_EXIT=$?
+              echo "ZAP exited with code $ZAP_EXIT, but continuing to check reports..."
             }
+          
+          echo ""
+          echo "=== ZAP Output Summary ==="
+          grep -E "(PASS|WARN|FAIL|Total)" /tmp/zap_output.log | tail -5 || echo "No summary found in output"
           
           echo ""
           echo "=== Checking generated reports ==="
@@ -175,19 +183,28 @@ jobs:
           else
             echo "✗ HTML report not found"
             # Create minimal HTML report as fallback
-            cat > EVIDENCE/P11/zap_baseline.html << 'EOF'
+            TARGET_URL="${{ steps.app_url.outputs.TARGET_URL }}"
+            cat > EVIDENCE/P11/zap_baseline.html << EOF
 <!DOCTYPE html>
 <html>
-<head><title>ZAP Baseline Scan Report</title></head>
+<head>
+  <title>ZAP Baseline Scan Report</title>
+  <meta charset="UTF-8">
+</head>
 <body>
-<h1>ZAP Baseline Scan Report</h1>
-<p>Scan completed. See logs for details.</p>
-<p>Target: ${{ steps.app_url.outputs.TARGET_URL }}</p>
+  <h1>OWASP ZAP Baseline Scan Report</h1>
+  <h2>Target: ${TARGET_URL}</h2>
+  <p>Scan completed. See workflow logs for detailed results.</p>
+  <p>For full report, check the JSON file: <code>zap_baseline.json</code></p>
 </body>
 </html>
 EOF
             echo "Created placeholder HTML report"
           fi
+          
+          echo ""
+          echo "=== Final report status ==="
+          ls -lh EVIDENCE/P11/*.{json,html,md} 2>/dev/null || echo "No reports found"
 
       - name: Parse ZAP results and generate summary
         run: |
