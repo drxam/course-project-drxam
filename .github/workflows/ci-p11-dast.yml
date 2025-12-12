@@ -132,64 +132,53 @@ jobs:
           docker port secdev-app 2>/dev/null || echo "Could not get port mapping"
 
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: ${{ steps.app_url.outputs.TARGET_URL }}
-          cmd_options: '-a -I -j'
-          fail_action: false
-          artifact_name: 'zap-reports'
-
-      - name: Download ZAP reports from artifact
-        uses: actions/download-artifact@v4
-        if: always()
-        with:
-          name: zap-reports
-          path: zap-artifacts
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Find and copy ZAP reports to EVIDENCE/P11
         run: |
           mkdir -p EVIDENCE/P11
-          echo "=== Searching for ZAP reports ==="
+          echo "=== Running ZAP Baseline Scan ==="
+          echo "Target: ${{ steps.app_url.outputs.TARGET_URL }}"
           
-          # First, check if reports are in the downloaded artifact
-          if [ -d "zap-artifacts" ]; then
-            echo "Found zap-artifacts directory, checking contents:"
-            ls -lah zap-artifacts/ || echo "zap-artifacts directory is empty"
-            
-            if [ -f "zap-artifacts/report_json.json" ]; then
-              cp zap-artifacts/report_json.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON from artifact"
-            fi
-            if [ -f "zap-artifacts/report_html.html" ]; then
-              cp zap-artifacts/report_html.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML from artifact"
-            fi
-            if [ -f "zap-artifacts/report_md.md" ]; then
-              cp zap-artifacts/report_md.md EVIDENCE/P11/zap_baseline.md && echo "✓ Copied MD from artifact"
-            fi
-          fi
+          # Use official ZAP image with zap-baseline script
+          # The image ghcr.io/zaproxy/zaproxy:stable includes zap-baseline.py
+          docker run --rm \
+            --network host \
+            -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
+            -w /zap/wrk \
+            -u $(id -u):$(id -g) \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t ${{ steps.app_url.outputs.TARGET_URL }} \
+            -a \
+            -I \
+            -j \
+            -J zap_baseline.json \
+            -r zap_baseline.html \
+            -w zap_baseline.md || {
+              echo "ZAP scan completed with warnings/errors, checking reports..."
+              exit_code=$?
+              # Check if reports were generated despite exit code
+              if [ -f "EVIDENCE/P11/zap_baseline.json" ] || [ -f "EVIDENCE/P11/zap_baseline.html" ]; then
+                echo "Reports generated successfully despite exit code $exit_code"
+                exit 0
+              else
+                echo "No reports found, exit code was $exit_code"
+                exit $exit_code
+              fi
+            }
           
-          # Also check workspace root (in case files were created there)
           echo ""
-          echo "=== Checking workspace root ==="
-          if [ -f "report_json.json" ]; then
-            cp report_json.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON from workspace root"
-          fi
-          if [ -f "report_html.html" ]; then
-            cp report_html.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML from workspace root"
-          fi
-          if [ -f "report_md.md" ]; then
-            cp report_md.md EVIDENCE/P11/zap_baseline.md && echo "✓ Copied MD from workspace root"
-          fi
-          
-          echo ""
-          echo "=== Final EVIDENCE/P11 contents ==="
+          echo "=== Checking generated reports ==="
           ls -lah EVIDENCE/P11/ || echo "EVIDENCE/P11/ directory not found"
           
-          # Verify reports exist
-          if [ ! -f "EVIDENCE/P11/zap_baseline.json" ] && [ ! -f "EVIDENCE/P11/zap_baseline.html" ]; then
-            echo ""
-            echo "WARNING: No reports found! Searching all locations:"
-            find . -name "report_*.json" -o -name "report_*.html" 2>/dev/null | head -10
+          if [ -f "EVIDENCE/P11/zap_baseline.json" ]; then
+            echo "✓ JSON report: $(wc -c < EVIDENCE/P11/zap_baseline.json) bytes"
+          else
+            echo "✗ JSON report not found"
+          fi
+          
+          if [ -f "EVIDENCE/P11/zap_baseline.html" ]; then
+            echo "✓ HTML report: $(wc -c < EVIDENCE/P11/zap_baseline.html) bytes"
+          else
+            echo "✗ HTML report not found"
           fi
 
       - name: Parse ZAP results and generate summary
