@@ -1,0 +1,85 @@
+# Gitleaks configuration for secrets scanning
+# This file defines allowlist patterns to exclude false positives
+
+title = "Gitleaks Configuration"
+
+# Global allowlist patterns
+[allowlist]
+description = "Global allowlist for common false positives"
+
+# Allowlist by path patterns
+paths = [
+  # Test files may contain example secrets
+  '(?i).*test.*\.py',
+  '(?i).*test.*\.json',
+  '(?i).*test.*\.yml',
+  '(?i).*test.*\.yaml',
+  # Documentation files
+  '.*\.md$',
+  '.*\.txt$',
+  # Example files
+  '.*example.*',
+  '.*sample.*',
+  # CI/CD workflow files (they may contain example secrets in comments)
+  '\.github/workflows/.*',
+  # Requirements files (no secrets expected)
+  'requirements.*\.txt',
+  'pyproject\.toml',
+  # Evidence directories (contain generated reports, not secrets)
+  'EVIDENCE/.*',
+  # Security configuration files themselves
+  'security/.*',
+]
+
+# Allowlist by regex patterns (for specific false positive patterns)
+regexes = [
+  # Masked secrets in code (these are intentionally masked for logging)
+  '(?i).*\*\*\*MASKED\*\*\*.*',
+  # Example/test tokens that are clearly not real
+  '(?i).*example.*token.*',
+  '(?i).*test.*key.*',
+  '(?i).*dummy.*secret.*',
+  # Development fallback secret key (not a real secret, just a placeholder)
+  '(?i).*your-secret-key-change-in-production.*',
+  # UUIDs that might be mistaken for tokens (but are just IDs)
+  '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+  # Correlation IDs in logs
+  '(?i).*correlation.*id.*',
+  # Pattern matching code (not actual secrets)
+  '(?i).*SECRET_PATTERNS.*',
+  '(?i).*mask_secrets.*',
+]
+
+# Commit allowlist (not used for source scanning, but kept for completeness)
+commits = []
+
+# Stopwords - common words that might trigger false positives
+stopwords = [
+  'example',
+  'test',
+  'dummy',
+  'placeholder',
+  'your_key_here',
+  'your_secret_here',
+]
+
+# Entropy-based filtering
+# High entropy strings are more likely to be secrets
+# We can adjust these thresholds if needed
+[entropy]
+# Minimum entropy for a string to be considered a potential secret
+# Range: 0.0 to 8.0 (default: 0.0, meaning entropy check is disabled by default)
+# For this project, we rely more on pattern matching than entropy
+min = 0.0
+max = 8.0
+
+# Notes:
+# - Real secrets should be removed from code and stored in environment variables
+# - False positives should be added to this allowlist with clear justification
+# - Review this configuration periodically to ensure it's not too permissive
+#
+# Specific allowlist entries:
+# - "your-secret-key-change-in-production": Development fallback value in app/security/auth.py
+#   This is a placeholder, not a real secret. In production, JWT_SECRET_KEY must be set via environment.
+# - SECRET_PATTERNS and mask_secrets: Code that handles secret masking, not actual secrets
+

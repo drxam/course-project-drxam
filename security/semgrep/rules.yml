@@ -1,0 +1,133 @@
+rules:
+  - id: fastapi-hardcoded-secrets
+    message: Hardcoded secret or sensitive value detected. Use environment variables or secrets management.
+    languages:
+      - python
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $VAR = "..."
+          - pattern: |
+              $VAR = '...'
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A07:2021 – Identification and Authentication Failures"
+    paths:
+      include:
+        - "app/**/*.py"
+      exclude:
+        - "**/test*.py"
+        - "**/*_test.py"
+        - "**/conftest.py"
+
+  - id: fastapi-unsafe-file-operations
+    message: File operation without proper path validation. Use validate_and_sanitize_path().
+    languages:
+      - python
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern: |
+              open($PATH, ...)
+          - pattern: |
+              Path($PATH).open(...)
+    metadata:
+      category: security
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+      owasp: "A01:2021 – Broken Access Control"
+    paths:
+      include:
+        - "app/**/*.py"
+      exclude:
+        - "app/security/file_validation.py"
+        - "**/test*.py"
+
+  - id: fastapi-sql-injection-risk
+    message: Potential SQL injection risk. Use parameterized queries or ORM methods.
+    languages:
+      - python
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              f"... $QUERY ..."
+          - pattern: |
+              "... $QUERY ...".format(...)
+          - pattern: |
+              "... $QUERY ..." % ...
+    metadata:
+      category: security
+      cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+      owasp: "A03:2021 – Injection"
+    paths:
+      include:
+        - "app/**/*.py"
+      exclude:
+        - "**/test*.py"
+
+  - id: fastapi-jwt-secret-validation
+    message: JWT operations should use secrets from environment variables, not hardcoded values.
+    languages:
+      - python
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              encode(..., key="...", ...)
+          - pattern: |
+              decode(..., key="...", ...)
+          - pattern: |
+              $FUNC(..., secret="...", ...)
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A07:2021 – Identification and Authentication Failures"
+    paths:
+      include:
+        - "app/**/*.py"
+      exclude:
+        - "**/test*.py"
+
+  - id: fastapi-unsafe-eval-exec
+    message: Use of eval() or exec() is dangerous and can lead to code injection.
+    languages:
+      - python
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
+          - pattern: __import__(...)
+    metadata:
+      category: security
+      cwe: "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"
+      owasp: "A03:2021 – Injection"
+    paths:
+      include:
+        - "app/**/*.py"
+
+  - id: fastapi-weak-cryptography
+    message: Weak cryptographic algorithm detected. Use strong algorithms (e.g., SHA-256, bcrypt, argon2).
+    languages:
+      - python
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern: hashlib.md5(...)
+          - pattern: hashlib.sha1(...)
+          - pattern: |
+              $HASH = md5(...)
+          - pattern: |
+              $HASH = sha1(...)
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+      owasp: "A02:2021 – Cryptographic Failures"
+    paths:
+      include:
+        - "app/**/*.py"
+      exclude:
+        - "**/test*.py"
+
