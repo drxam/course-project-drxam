@@ -127,23 +127,47 @@ jobs:
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a -J -r zap_baseline.json -w zap_baseline.html -I -j'
           fail_action: false
-          upload_artifact: false
+          upload_artifact: true
+          artifact_name: 'zap-reports'
+          artifact_merge: false
 
-      - name: Copy ZAP reports to EVIDENCE/P11
+      - name: Find and copy ZAP reports to EVIDENCE/P11
         run: |
           mkdir -p EVIDENCE/P11
+          echo "=== Searching for ZAP reports ==="
+          find . -name "zap_baseline.json" -o -name "zap_baseline.html" 2>/dev/null | head -10
+          echo ""
+          echo "=== Checking common locations ==="
+          ls -la zap_baseline.* 2>/dev/null || echo "No zap_baseline.* in root"
+          ls -la .zap/ 2>/dev/null || echo "No .zap/ directory"
+          ls -la reports/ 2>/dev/null || echo "No reports/ directory"
+          echo ""
+          echo "=== Copying reports ==="
+          # Try multiple possible locations
           if [ -f "zap_baseline.json" ]; then
-            cp zap_baseline.json EVIDENCE/P11/
-            echo "✓ Copied JSON report"
+            cp zap_baseline.json EVIDENCE/P11/ && echo "✓ Copied JSON from root"
+          elif [ -f ".zap/zap_baseline.json" ]; then
+            cp .zap/zap_baseline.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON from .zap/"
+          elif [ -f "reports/zap_baseline.json" ]; then
+            cp reports/zap_baseline.json EVIDENCE/P11/zap_baseline.json && echo "✓ Copied JSON from reports/"
           else
-            echo "✗ JSON report not found"
+            echo "✗ JSON report not found in any location"
+            find . -name "*.json" -type f 2>/dev/null | head -5
           fi
+          
           if [ -f "zap_baseline.html" ]; then
-            cp zap_baseline.html EVIDENCE/P11/
-            echo "✓ Copied HTML report"
+            cp zap_baseline.html EVIDENCE/P11/ && echo "✓ Copied HTML from root"
+          elif [ -f ".zap/zap_baseline.html" ]; then
+            cp .zap/zap_baseline.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML from .zap/"
+          elif [ -f "reports/zap_baseline.html" ]; then
+            cp reports/zap_baseline.html EVIDENCE/P11/zap_baseline.html && echo "✓ Copied HTML from reports/"
           else
-            echo "✗ HTML report not found"
+            echo "✗ HTML report not found in any location"
+            find . -name "*.html" -type f 2>/dev/null | head -5
           fi
+          
+          echo ""
+          echo "=== Final EVIDENCE/P11 contents ==="
           ls -lah EVIDENCE/P11/ || echo "EVIDENCE/P11/ directory not found"
 
       - name: Parse ZAP results and generate summary
