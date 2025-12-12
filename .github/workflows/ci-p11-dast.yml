@@ -110,21 +110,25 @@ jobs:
       - name: Get application URL for ZAP
         id: app_url
         run: |
-          # ZAP Action runs in a container, so it needs to access the app via host network
-          # Since the app is exposed on host port 8000, we can use host.docker.internal
-          # But GitHub Actions runners don't support host.docker.internal, so we use the container IP
-          APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' secdev-app | head -1)
-          if [ -z "$APP_IP" ]; then
-            # Fallback to localhost (might work if ZAP Action uses host network)
+          # ZAP Action runs in a container, but GitHub Actions runners expose ports on localhost
+          # Since docker-compose maps port 8000 to host, we can use localhost:8000
+          # Verify the port is accessible
+          if curl -sf http://localhost:8000/health > /dev/null; then
             echo "TARGET_URL=http://localhost:8000" >> $GITHUB_OUTPUT
-            echo "Using localhost:8000 (fallback)"
+            echo "✓ Using localhost:8000 (port is accessible)"
           else
-            echo "TARGET_URL=http://$APP_IP:8000" >> $GITHUB_OUTPUT
-            echo "Using app container IP: $APP_IP"
-            echo "Note: ZAP Action may need to be in the same Docker network to access this IP"
+            # Try container IP as fallback (though this may not work if networks differ)
+            APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' secdev-app | head -1)
+            if [ -n "$APP_IP" ]; then
+              echo "TARGET_URL=http://$APP_IP:8000" >> $GITHUB_OUTPUT
+              echo "Using app container IP: $APP_IP (localhost not accessible)"
+            else
+              echo "TARGET_URL=http://localhost:8000" >> $GITHUB_OUTPUT
+              echo "Using localhost:8000 (default, may not work)"
+            fi
           fi
           
-          # Also expose the port mapping for debugging
+          echo "Target URL will be: ${{ steps.app_url.outputs.TARGET_URL }}"
           docker port secdev-app 2>/dev/null || echo "Could not get port mapping"
 
       - name: Run OWASP ZAP Baseline Scan
