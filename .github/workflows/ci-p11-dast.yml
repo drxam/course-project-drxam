@@ -137,13 +137,17 @@ jobs:
           echo "=== Running ZAP Baseline Scan ==="
           echo "Target: ${{ steps.app_url.outputs.TARGET_URL }}"
           
+          # Create a temporary directory for ZAP to use
+          mkdir -p /tmp/zap-work
+          chmod 777 /tmp/zap-work
+          
           # Use official ZAP image with zap-baseline script
-          # The image ghcr.io/zaproxy/zaproxy:stable includes zap-baseline.py
+          # Mount both EVIDENCE/P11 for reports and /tmp/zap-work for ZAP's internal files
           docker run --rm \
             --network host \
             -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
+            -v /tmp/zap-work:/home/zap:rw \
             -w /zap/wrk \
-            -u $(id -u):$(id -g) \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ steps.app_url.outputs.TARGET_URL }} \
