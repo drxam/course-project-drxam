@@ -47,7 +47,7 @@ jobs:
 
       - name: Start application with docker-compose
         run: |
-          docker compose up -d --build
+          docker compose -f docker-compose.yml up -d --build
           echo "Waiting for application to be ready..."
           timeout=60
           elapsed=0
@@ -62,7 +62,7 @@ jobs:
             elapsed=$((elapsed + 2))
           done
           echo "ERROR: Application did not become ready within $timeout seconds"
-          docker compose logs
+          docker compose -f docker-compose.yml logs
           exit 1
 
       - name: Get application container IP
@@ -192,7 +192,7 @@ jobs:
       - name: Stop application
         if: always()
         run: |
-          docker compose down -v || true
+          docker compose -f docker-compose.yml down -v || true
 
       - name: Upload DAST artifacts
         uses: actions/upload-artifact@v4
