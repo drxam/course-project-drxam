@@ -132,11 +132,15 @@ jobs:
           
           # Run ZAP with explicit error handling
           set +e  # Don't exit on error immediately
+          # Use the correct ZAP image (ghcr.io is the official registry)
+          ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:stable"
+          echo "Using ZAP image: $ZAP_IMAGE"
+          
           if [ "$NETWORK_MODE" = "host" ]; then
             docker run --rm \
               --network host \
               -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-              -t owasp/zap2docker-stable:latest \
+              -t $ZAP_IMAGE \
               zap-baseline.py \
               -t $TARGET_URL \
               -g gen.conf \
@@ -150,7 +154,7 @@ jobs:
             docker run --rm \
               --network ${{ env.COMPOSE_NETWORK }} \
               -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-              -t owasp/zap2docker-stable:latest \
+              -t $ZAP_IMAGE \
               zap-baseline.py \
               -t $TARGET_URL \
               -g gen.conf \
