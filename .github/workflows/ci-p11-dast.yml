@@ -136,17 +136,20 @@ jobs:
           ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:stable"
           echo "Using ZAP image: $ZAP_IMAGE"
           
+          # ZAP baseline script saves reports to current working directory by default
+          # We need to run it from /zap/wrk/ directory
           if [ "$NETWORK_MODE" = "host" ]; then
             docker run --rm \
               --network host \
               -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
+              -w /zap/wrk \
               -t $ZAP_IMAGE \
               zap-baseline.py \
               -t $TARGET_URL \
               -g gen.conf \
               -J \
-              -r /zap/wrk/zap_baseline.json \
-              -w /zap/wrk/zap_baseline.html \
+              -r zap_baseline.json \
+              -w zap_baseline.html \
               -I \
               -j \
               2>&1 | tee /tmp/zap_output.log || true
@@ -154,17 +157,27 @@ jobs:
             docker run --rm \
               --network ${{ env.COMPOSE_NETWORK }} \
               -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
+              -w /zap/wrk \
               -t $ZAP_IMAGE \
               zap-baseline.py \
               -t $TARGET_URL \
               -g gen.conf \
               -J \
-              -r /zap/wrk/zap_baseline.json \
-              -w /zap/wrk/zap_baseline.html \
+              -r zap_baseline.json \
+              -w zap_baseline.html \
               -I \
               -j \
               2>&1 | tee /tmp/zap_output.log || true
           fi
+          
+          # Also check if reports were created in /zap/ directory (default location)
+          echo ""
+          echo "=== Checking /zap/ directory inside container ==="
+          docker run --rm \
+            --network ${{ env.COMPOSE_NETWORK }} \
+            -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
+            $ZAP_IMAGE \
+            sh -c "ls -la /zap/*.json /zap/*.html 2>/dev/null || echo 'No reports in /zap/'"
           
           echo "=== ZAP Output ==="
           cat /tmp/zap_output.log || echo "No output log found"
