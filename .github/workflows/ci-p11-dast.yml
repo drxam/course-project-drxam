@@ -47,6 +47,8 @@ jobs:
 
       - name: Start application with docker-compose
         run: |
+          # Create empty .env file if it doesn't exist (docker-compose.yml references it)
+          touch .env || true
           docker compose -f docker-compose.yml up -d --build
           echo "Waiting for application to be ready..."
           timeout=60
