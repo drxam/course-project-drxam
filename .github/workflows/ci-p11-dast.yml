@@ -62,6 +62,11 @@ jobs:
                 - /app/uploads
           EOF
           docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+          
+          # Get the network name used by docker-compose
+          COMPOSE_NETWORK=$(docker compose -f docker-compose.yml ps -q app | xargs docker inspect -f '{{range $net, $v := .NetworkSettings.Networks}}{{$net}}{{end}}' | head -1)
+          echo "COMPOSE_NETWORK=$COMPOSE_NETWORK" >> $GITHUB_ENV
+          echo "Docker compose network: $COMPOSE_NETWORK"
           echo "Waiting for application to be ready..."
           timeout=60
           elapsed=0
@@ -110,21 +115,52 @@ jobs:
           echo "Checking mount point..."
           ls -la EVIDENCE/P11/ || mkdir -p EVIDENCE/P11
           
+          # Get application container IP for ZAP to connect
+          APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' secdev-app | head -1)
+          if [ -z "$APP_IP" ]; then
+            echo "Could not get app IP, trying host network mode"
+            TARGET_URL="http://localhost:8000"
+            NETWORK_MODE="host"
+          else
+            echo "Using app container IP: $APP_IP"
+            TARGET_URL="http://$APP_IP:8000"
+            NETWORK_MODE="bridge"
+          fi
+          
+          echo "Target URL for ZAP: $TARGET_URL"
+          echo "Network mode: $NETWORK_MODE"
+          
           # Run ZAP with explicit error handling
           set +e  # Don't exit on error immediately
-          docker run --rm \
-            --network host \
-            -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-            -t owasp/zap2docker-stable:latest \
-            zap-baseline.py \
-            -t http://localhost:8000 \
-            -g gen.conf \
-            -J \
-            -r /zap/wrk/zap_baseline.json \
-            -w /zap/wrk/zap_baseline.html \
-            -I \
-            -j \
-            2>&1 | tee /tmp/zap_output.log || true
+          if [ "$NETWORK_MODE" = "host" ]; then
+            docker run --rm \
+              --network host \
+              -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
+              -t owasp/zap2docker-stable:latest \
+              zap-baseline.py \
+              -t $TARGET_URL \
+              -g gen.conf \
+              -J \
+              -r /zap/wrk/zap_baseline.json \
+              -w /zap/wrk/zap_baseline.html \
+              -I \
+              -j \
+              2>&1 | tee /tmp/zap_output.log || true
+          else
+            docker run --rm \
+              --network ${{ env.COMPOSE_NETWORK }} \
+              -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
+              -t owasp/zap2docker-stable:latest \
+              zap-baseline.py \
+              -t $TARGET_URL \
+              -g gen.conf \
+              -J \
+              -r /zap/wrk/zap_baseline.json \
+              -w /zap/wrk/zap_baseline.html \
+              -I \
+              -j \
+              2>&1 | tee /tmp/zap_output.log || true
+          fi
           
           echo "=== ZAP Output ==="
           cat /tmp/zap_output.log || echo "No output log found"
