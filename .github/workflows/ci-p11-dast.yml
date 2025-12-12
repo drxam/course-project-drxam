@@ -136,48 +136,55 @@ jobs:
           ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:stable"
           echo "Using ZAP image: $ZAP_IMAGE"
           
-          # ZAP baseline script saves reports to current working directory by default
-          # We need to run it from /zap/wrk/ directory
+          # Create a container name for ZAP so we can copy files from it
+          ZAP_CONTAINER="zap-scan-$$"
+          
+          # ZAP baseline script saves reports to /zap/ directory by default
+          # We'll copy them after the scan completes
           if [ "$NETWORK_MODE" = "host" ]; then
-            docker run --rm \
+            docker run --name $ZAP_CONTAINER \
               --network host \
               -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-              -w /zap/wrk \
               -t $ZAP_IMAGE \
               zap-baseline.py \
               -t $TARGET_URL \
               -g gen.conf \
               -J \
-              -r zap_baseline.json \
-              -w zap_baseline.html \
+              -r /zap/wrk/zap_baseline.json \
+              -w /zap/wrk/zap_baseline.html \
               -I \
               -j \
               2>&1 | tee /tmp/zap_output.log || true
           else
-            docker run --rm \
+            docker run --name $ZAP_CONTAINER \
               --network ${{ env.COMPOSE_NETWORK }} \
               -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-              -w /zap/wrk \
               -t $ZAP_IMAGE \
               zap-baseline.py \
               -t $TARGET_URL \
               -g gen.conf \
               -J \
-              -r zap_baseline.json \
-              -w zap_baseline.html \
+              -r /zap/wrk/zap_baseline.json \
+              -w /zap/wrk/zap_baseline.html \
               -I \
               -j \
               2>&1 | tee /tmp/zap_output.log || true
           fi
           
-          # Also check if reports were created in /zap/ directory (default location)
+          # Check what files exist in the container
           echo ""
-          echo "=== Checking /zap/ directory inside container ==="
-          docker run --rm \
-            --network ${{ env.COMPOSE_NETWORK }} \
-            -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-            $ZAP_IMAGE \
-            sh -c "ls -la /zap/*.json /zap/*.html 2>/dev/null || echo 'No reports in /zap/'"
+          echo "=== Checking files in ZAP container ==="
+          docker exec $ZAP_CONTAINER ls -la /zap/ 2>/dev/null || echo "Container already removed or no /zap/ directory"
+          docker exec $ZAP_CONTAINER ls -la /zap/wrk/ 2>/dev/null || echo "No /zap/wrk/ directory"
+          
+          # Try to copy reports from container if they exist in /zap/
+          echo ""
+          echo "=== Copying reports from container ==="
+          docker cp $ZAP_CONTAINER:/zap/zap_baseline.json EVIDENCE/P11/ 2>/dev/null || echo "No JSON report in /zap/"
+          docker cp $ZAP_CONTAINER:/zap/zap_baseline.html EVIDENCE/P11/ 2>/dev/null || echo "No HTML report in /zap/"
+          
+          # Clean up container
+          docker rm $ZAP_CONTAINER 2>/dev/null || true
           
           echo "=== ZAP Output ==="
           cat /tmp/zap_output.log || echo "No output log found"
