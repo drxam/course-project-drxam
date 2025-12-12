@@ -79,27 +79,34 @@ jobs:
           docker compose -f docker-compose.yml logs
           exit 1
 
-      - name: Get application container IP
-        id: app_ip
+      - name: Verify application is accessible
         run: |
-          APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' secdev-app || echo "172.17.0.2")
-          echo "APP_IP=$APP_IP" >> $GITHUB_OUTPUT
-          echo "Application container IP: $APP_IP"
+          echo "Checking application accessibility..."
+          curl -v http://localhost:8000/health || true
+          docker ps
+          docker network ls
+          docker inspect secdev-app | grep -A 10 "NetworkSettings" || true
 
       - name: Run OWASP ZAP Baseline Scan
         run: |
+          # Use host network mode to access localhost:8000
           docker run --rm \
-            --network container:secdev-app \
+            --network host \
             -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
             -t owasp/zap2docker-stable:latest \
             zap-baseline.py \
             -t http://localhost:8000 \
             -g gen.conf \
             -J \
-            -r zap_baseline.json \
-            -w zap_baseline.html \
+            -r /zap/wrk/zap_baseline.json \
+            -w /zap/wrk/zap_baseline.html \
             -I \
-            -j || true
+            -j \
+            --hook=/zap/auth_hook.py || {
+              echo "ZAP scan completed with exit code $?"
+              # Check if reports were generated despite exit code
+              ls -la EVIDENCE/P11/ || true
+            }
           
           # Check if reports exist
           if [ -f "EVIDENCE/P11/zap_baseline.json" ]; then
