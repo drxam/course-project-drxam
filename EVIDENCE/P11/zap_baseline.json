@@ -1,0 +1,50 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "OWASP ZAP",
+          "version": "stable",
+          "informationUri": "https://www.zaproxy.org/"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "10049",
+          "level": "warning",
+          "message": {
+            "text": "Storable and Cacheable Content"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://localhost:8000/"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "90005",
+          "level": "warning",
+          "message": {
+            "text": "Sec-Fetch-Dest Header is Missing"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://localhost:8000/"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
