@@ -138,9 +138,7 @@ jobs:
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a -J -r zap_baseline.json -w zap_baseline.html -I -j'
           fail_action: false
-          upload_artifact: true
           artifact_name: 'zap-reports'
-          artifact_merge: false
 
       - name: Find and copy ZAP reports to EVIDENCE/P11
         run: |
