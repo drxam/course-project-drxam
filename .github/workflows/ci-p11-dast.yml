@@ -107,148 +107,44 @@ jobs:
           echo "Application container details:"
           docker inspect secdev-app --format '{{.State.Status}}' || echo "Container not found"
 
-      - name: Run OWASP ZAP Baseline Scan
+      - name: Get application URL for ZAP
+        id: app_url
         run: |
-          echo "=== Starting ZAP Baseline Scan ==="
-          echo "Target URL: http://localhost:8000"
-          echo "Working directory: ${{ github.workspace }}/EVIDENCE/P11"
-          echo "Checking mount point..."
-          ls -la EVIDENCE/P11/ || mkdir -p EVIDENCE/P11
-          
           # Get application container IP for ZAP to connect
           APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' secdev-app | head -1)
           if [ -z "$APP_IP" ]; then
-            echo "Could not get app IP, trying host network mode"
-            TARGET_URL="http://localhost:8000"
-            NETWORK_MODE="host"
+            echo "TARGET_URL=http://localhost:8000" >> $GITHUB_OUTPUT
+            echo "Using localhost:8000"
           else
+            echo "TARGET_URL=http://$APP_IP:8000" >> $GITHUB_OUTPUT
             echo "Using app container IP: $APP_IP"
-            TARGET_URL="http://$APP_IP:8000"
-            NETWORK_MODE="bridge"
           fi
-          
-          echo "Target URL for ZAP: $TARGET_URL"
-          echo "Network mode: $NETWORK_MODE"
-          
-          # Run ZAP with explicit error handling
-          set +e  # Don't exit on error immediately
-          # Use the correct ZAP image with zap-baseline script
-          # owasp/zap2docker-stable is the official image with zap-baseline.py
-          ZAP_IMAGE="owasp/zap2docker-stable"
-          echo "Using ZAP image: $ZAP_IMAGE"
-          
-          # Create a container name for ZAP so we can copy files from it
-          ZAP_CONTAINER="zap-scan-$(date +%s)"
-          
-          # ZAP baseline script saves reports to current directory or /zap/
-          # Mount EVIDENCE/P11 to both /zap/wrk/ and use it as working directory
-          if [ "$NETWORK_MODE" = "host" ]; then
-            docker run --name $ZAP_CONTAINER \
-              --network host \
-              -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-              -w /zap/wrk \
-              -t $ZAP_IMAGE \
-              zap-baseline.py \
-              -t $TARGET_URL \
-              -g gen.conf \
-              -J \
-              -r zap_baseline.json \
-              -w zap_baseline.html \
-              -I \
-              -j \
-              2>&1 | tee /tmp/zap_output.log || true
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ steps.app_url.outputs.TARGET_URL }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -J -r zap_baseline.json -w zap_baseline.html -I -j'
+          fail_action: false
+          upload_artifact: false
+
+      - name: Copy ZAP reports to EVIDENCE/P11
+        run: |
+          mkdir -p EVIDENCE/P11
+          if [ -f "zap_baseline.json" ]; then
+            cp zap_baseline.json EVIDENCE/P11/
+            echo "✓ Copied JSON report"
           else
-            docker run --name $ZAP_CONTAINER \
-              --network ${{ env.COMPOSE_NETWORK }} \
-              -v "${{ github.workspace }}/EVIDENCE/P11:/zap/wrk/:rw" \
-              -w /zap/wrk \
-              -t $ZAP_IMAGE \
-              zap-baseline.py \
-              -t $TARGET_URL \
-              -g gen.conf \
-              -J \
-              -r zap_baseline.json \
-              -w zap_baseline.html \
-              -I \
-              -j \
-              2>&1 | tee /tmp/zap_output.log || true
+            echo "✗ JSON report not found"
           fi
-          
-          # Wait a moment for files to be written
-          sleep 2
-          
-          # Check what files exist in the container
-          echo ""
-          echo "=== Checking files in ZAP container ==="
-          docker exec $ZAP_CONTAINER ls -la /zap/ 2>/dev/null || echo "Container stopped or no /zap/ directory"
-          docker exec $ZAP_CONTAINER ls -la /zap/wrk/ 2>/dev/null || echo "No /zap/wrk/ directory"
-          docker exec $ZAP_CONTAINER find /zap -name "*.json" -o -name "*.html" 2>/dev/null || echo "No reports found in /zap"
-          
-          # Try to copy reports from container if they exist in /zap/ (default location)
-          echo ""
-          echo "=== Copying reports from container ==="
-          docker cp $ZAP_CONTAINER:/zap/zap_baseline.json EVIDENCE/P11/ 2>/dev/null && echo "Copied JSON from /zap/" || echo "No JSON report in /zap/"
-          docker cp $ZAP_CONTAINER:/zap/zap_baseline.html EVIDENCE/P11/ 2>/dev/null && echo "Copied HTML from /zap/" || echo "No HTML report in /zap/"
-          
-          # Also check /zap/wrk/ (mounted directory)
-          docker cp $ZAP_CONTAINER:/zap/wrk/zap_baseline.json EVIDENCE/P11/ 2>/dev/null && echo "Copied JSON from /zap/wrk/" || echo "No JSON report in /zap/wrk/"
-          docker cp $ZAP_CONTAINER:/zap/wrk/zap_baseline.html EVIDENCE/P11/ 2>/dev/null && echo "Copied HTML from /zap/wrk/" || echo "No HTML report in /zap/wrk/"
-          
-          # Clean up container
-          docker rm $ZAP_CONTAINER 2>/dev/null || true
-          
-          echo "=== ZAP Output ==="
-          cat /tmp/zap_output.log || echo "No output log found"
-          
-          ZAP_EXIT_CODE=$?
-          echo "ZAP exit code: $ZAP_EXIT_CODE"
-          
-          # Check what files were created
-          echo ""
-          echo "=== Checking generated files ==="
+          if [ -f "zap_baseline.html" ]; then
+            cp zap_baseline.html EVIDENCE/P11/
+            echo "✓ Copied HTML report"
+          else
+            echo "✗ HTML report not found"
+          fi
           ls -lah EVIDENCE/P11/ || echo "EVIDENCE/P11/ directory not found"
-          
-          # Check if reports exist
-          if [ -f "EVIDENCE/P11/zap_baseline.json" ]; then
-            echo "✓ JSON report found: $(wc -c < EVIDENCE/P11/zap_baseline.json) bytes"
-          else
-            echo "✗ JSON report NOT found"
-          fi
-          
-          if [ -f "EVIDENCE/P11/zap_baseline.html" ]; then
-            echo "✓ HTML report found: $(wc -c < EVIDENCE/P11/zap_baseline.html) bytes"
-          else
-            echo "✗ HTML report NOT found"
-          fi
-          
-          # If reports don't exist, try alternative paths
-          echo ""
-          echo "=== Checking alternative locations ==="
-          docker run --rm --network host -v "${{ github.workspace }}:/workspace" -w /workspace alpine ls -la EVIDENCE/P11/ 2>&1 || true
-          
-          # Exit with error if no reports were generated
-          if [ ! -f "EVIDENCE/P11/zap_baseline.json" ] && [ ! -f "EVIDENCE/P11/zap_baseline.html" ]; then
-            echo "ERROR: No ZAP reports were generated!"
-            echo "ZAP exit code was: $ZAP_EXIT_CODE"
-            exit 1
-          fi
-          
-          set -e  # Re-enable exit on error
-          
-          # Check if reports exist
-          if [ -f "EVIDENCE/P11/zap_baseline.json" ]; then
-            echo "ZAP JSON report generated successfully"
-            ls -lh EVIDENCE/P11/zap_baseline.json
-          else
-            echo "Warning: ZAP JSON report was not generated"
-          fi
-          
-          if [ -f "EVIDENCE/P11/zap_baseline.html" ]; then
-            echo "ZAP HTML report generated successfully"
-            ls -lh EVIDENCE/P11/zap_baseline.html
-          else
-            echo "Warning: ZAP HTML report was not generated"
-          fi
 
       - name: Parse ZAP results and generate summary
         run: |
